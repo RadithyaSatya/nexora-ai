@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     container_name: nexora-ai
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-8001}:${APP_PORT:-8001}"
     environment:
       NEXORA_HOST: 0.0.0.0
       NEXORA_PORT: ${APP_PORT:-8001}
@@ -17,17 +19,3 @@ services:
       NEXORA_BASELINE_LONG_WINDOW: ${BASELINE_LONG_WINDOW:-24}
       NEXORA_BASELINE_SHORT_WEIGHT: ${BASELINE_SHORT_WEIGHT:-0.6}
       NEXORA_BASELINE_LONG_WEIGHT: ${BASELINE_LONG_WEIGHT:-0.4}
-
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: nexora-ai-nginx
-    restart: unless-stopped
-    depends_on:
-      - nexora-ai
-    ports:
-      - "80:80"
-    environment:
-      NEXORA_DOMAIN: ${APP_DOMAIN:-ai-dev.example.com}
-      NEXORA_PORT: ${APP_PORT:-8001}
-    volumes:
-      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro

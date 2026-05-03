@@ -65,7 +65,7 @@ docker run -d --name nexora-ai -p 8001:8001 nexora-ai
 Project ini sekarang punya dua mode compose:
 
 - `docker-compose.dev.yml` untuk development
-- `docker-compose.prod.yml` untuk production/VPS dengan Nginx + subdomain
+- `docker-compose.prod.yml` untuk production/VPS di belakang Nginx host
 
 ### Dev
 
@@ -105,7 +105,7 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 Contoh env prod:
 
 ```env
-APP_DOMAIN=ai-dev.example.com
+APP_DOMAIN=ai.example.com
 APP_PORT=8001
 HISTORY_WINDOW_DAYS=7
 MIN_HISTORY_SAMPLES=24
@@ -118,10 +118,24 @@ BASELINE_SHORT_WEIGHT=0.6
 BASELINE_LONG_WEIGHT=0.4
 ```
 
-Untuk akses publik, arahkan subdomain ke IP VPS lalu hit:
+Mode prod tidak membuka port public langsung. Service dibind ke host lokal VPS, lalu Nginx host melakukan reverse proxy ke sana.
+
+AI service akan tersedia di:
 
 ```text
-http://ai-dev.example.com
+http://127.0.0.1:8001
+```
+
+Contoh config Nginx host tersedia di:
+
+```text
+nginx/ai.prod.conf.example
+```
+
+Setelah subdomain diarahkan lewat Nginx host, akses publiknya menjadi:
+
+```text
+http://ai.example.com
 ```
 
 Kalau backend Anda ada di Docker network yang sama, backend bisa hit AI service lewat:

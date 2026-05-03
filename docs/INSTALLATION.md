@@ -75,7 +75,7 @@ Project ini menyediakan dua mode Docker Compose.
 
 ### 1. Dev
 
-Mode ini tidak memakai Nginx. Service AI langsung expose ke port lokal.
+Mode ini tidak memakai Nginx. Service AI langsung expose ke host/port yang Anda tentukan.
 
 Siapkan env:
 
@@ -110,9 +110,11 @@ Akses:
 http://127.0.0.1:8001
 ```
 
+Mode dev memang dibuka ke host publik pada port `APP_PORT`, jadi service bisa di-hit dari luar VPS melalui `http://IP_VPS:8001`.
+
 ### 2. Prod / VPS
 
-Mode ini memakai Nginx dan cocok untuk akses publik via subdomain.
+Mode ini tidak menjalankan Nginx di dalam compose. Service AI dibind ke host lokal VPS, lalu Nginx host yang sudah ada melakukan reverse proxy berdasarkan subdomain.
 
 Siapkan env:
 
@@ -123,7 +125,7 @@ cp .env.prod.example .env.prod
 Contoh:
 
 ```env
-APP_DOMAIN=ai-dev.example.com
+APP_DOMAIN=ai.example.com
 APP_PORT=8001
 HISTORY_WINDOW_DAYS=7
 MIN_HISTORY_SAMPLES=24
@@ -145,7 +147,19 @@ docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 Akses publik:
 
 ```text
-http://ai-dev.example.com
+http://ai.example.com
+```
+
+Service internal yang diproxy oleh Nginx host:
+
+```text
+http://127.0.0.1:8001
+```
+
+Contoh config Nginx host:
+
+```text
+nginx/ai.prod.conf.example
 ```
 
 ### Stop dan Logs
@@ -182,7 +196,7 @@ Contoh:
 
 ```bash
 APP_PORT=8010 \
-APP_DOMAIN=ai-dev.example.com \
+APP_DOMAIN=ai.example.com \
 HISTORY_WINDOW_DAYS=7 \
 MIN_HISTORY_SAMPLES=24 \
 MAX_RECOMMENDATIONS=3 \
@@ -200,6 +214,6 @@ python3 service.py
 - History AI disimpan in-memory selama process `service.py` hidup.
 - History analitik memakai time window, default 7 hari terakhir berdasarkan `timestamp`.
 - Peak detection butuh minimal 24 sampel komunitas sebelum status selain `warming_up` dianggap valid.
-- Akses publik dianjurkan lewat Nginx + subdomain, bukan expose port AI service langsung.
+- Untuk production, lebih aman bind AI ke `127.0.0.1` dan expose publik lewat Nginx host.
 - Jika backend ada di Docker network yang sama, backend bisa hit `http://nexora-ai:8001`.
 - Detail endpoint ada di [API_CONTRACT.md](./API_CONTRACT.md).
