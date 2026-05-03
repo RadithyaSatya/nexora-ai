@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.git/
+.gitignore
+.DS_Store
+.env
+.env.*
+*.log
+*.tmp
+*.swp
+
+evaluation/
+.env
