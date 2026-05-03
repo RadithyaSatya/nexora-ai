@@ -71,22 +71,22 @@ python service.py
 
 ## Docker Compose
 
-Jalankan service dengan Docker Compose:
+Project ini menyediakan dua mode Docker Compose.
 
-1. Siapkan file environment:
+### 1. Dev
+
+Mode ini tidak memakai Nginx. Service AI langsung expose ke port lokal.
+
+Siapkan env:
 
 ```bash
-cp .env.example .env
+cp .env.dev.example .env.dev
 ```
-
-2. Atur port atau config lain di `.env`
 
 Contoh:
 
 ```env
-APP_DOMAIN=ai-dev.example.com
 APP_PORT=8001
-PROXY_PORT=80
 HISTORY_WINDOW_DAYS=7
 MIN_HISTORY_SAMPLES=24
 MAX_RECOMMENDATIONS=3
@@ -98,48 +98,76 @@ BASELINE_SHORT_WEIGHT=0.6
 BASELINE_LONG_WEIGHT=0.4
 ```
 
-Penjelasan:
-
-- `APP_DOMAIN`: subdomain/domain yang akan dilayani Nginx
-- `APP_PORT`: port internal service AI di docker network
-- variable tuning lain dipakai untuk perilaku AI
-- container AI sendiri tetap internal-only, tidak expose public port langsung
-
-3. Jalankan service:
+Jalankan:
 
 ```bash
-docker compose up -d --build
+docker compose --env-file .env.dev -f docker-compose.dev.yml up -d --build
 ```
 
-Stop service:
-
-```bash
-docker compose down
-```
-
-Lihat log:
-
-```bash
-docker compose logs -f
-```
-
-File compose yang dipakai:
+Akses:
 
 ```text
-docker-compose.yml
+http://127.0.0.1:8001
 ```
 
-File environment contoh:
+### 2. Prod / VPS
+
+Mode ini memakai Nginx dan cocok untuk akses publik via subdomain.
+
+Siapkan env:
+
+```bash
+cp .env.prod.example .env.prod
+```
+
+Contoh:
+
+```env
+APP_DOMAIN=ai-dev.example.com
+APP_PORT=8001
+HISTORY_WINDOW_DAYS=7
+MIN_HISTORY_SAMPLES=24
+MAX_RECOMMENDATIONS=3
+HIGH_TRIGGER_MULTIPLIER=1.22
+CRITICAL_TRIGGER_MULTIPLIER=1.45
+BASELINE_SHORT_WINDOW=6
+BASELINE_LONG_WINDOW=24
+BASELINE_SHORT_WEIGHT=0.6
+BASELINE_LONG_WEIGHT=0.4
+```
+
+Jalankan:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+```
+
+Akses publik:
 
 ```text
-.env.example
+http://ai-dev.example.com
+```
+
+### Stop dan Logs
+
+Dev:
+
+```bash
+docker compose --env-file .env.dev -f docker-compose.dev.yml down
+docker compose --env-file .env.dev -f docker-compose.dev.yml logs -f
+```
+
+Prod:
+
+```bash
+docker compose --env-file .env.prod -f docker-compose.prod.yml down
+docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f
 ```
 
 ## Environment Variables
 
-- `APP_DOMAIN`
 - `APP_PORT`
-- `PROXY_PORT`
+- `APP_DOMAIN` hanya untuk mode prod
 - `HISTORY_WINDOW_DAYS`
 - `MIN_HISTORY_SAMPLES`
 - `MAX_RECOMMENDATIONS`
@@ -155,7 +183,6 @@ Contoh:
 ```bash
 APP_PORT=8010 \
 APP_DOMAIN=ai-dev.example.com \
-PROXY_PORT=80 \
 HISTORY_WINDOW_DAYS=7 \
 MIN_HISTORY_SAMPLES=24 \
 MAX_RECOMMENDATIONS=3 \
@@ -174,5 +201,5 @@ python3 service.py
 - History analitik memakai time window, default 7 hari terakhir berdasarkan `timestamp`.
 - Peak detection butuh minimal 24 sampel komunitas sebelum status selain `warming_up` dianggap valid.
 - Akses publik dianjurkan lewat Nginx + subdomain, bukan expose port AI service langsung.
-- Jika backend ada di `docker-compose` yang sama, backend bisa hit `http://nexora-ai:8001`.
+- Jika backend ada di Docker network yang sama, backend bisa hit `http://nexora-ai:8001`.
 - Detail endpoint ada di [API_CONTRACT.md](./API_CONTRACT.md).

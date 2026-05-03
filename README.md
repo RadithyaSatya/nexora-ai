@@ -62,16 +62,22 @@ docker run -d --name nexora-ai -p 8001:8001 nexora-ai
 
 ## Docker Compose
 
+Project ini sekarang punya dua mode compose:
+
+- `docker-compose.dev.yml` untuk development
+- `docker-compose.prod.yml` untuk production/VPS dengan Nginx + subdomain
+
+### Dev
+
 ```bash
-cp .env.example .env
+cp .env.dev.example .env.dev
+docker compose --env-file .env.dev -f docker-compose.dev.yml up -d --build
 ```
 
-Atur port di `.env`:
+Contoh env dev:
 
 ```env
-APP_DOMAIN=ai-dev.example.com
 APP_PORT=8001
-PROXY_PORT=80
 HISTORY_WINDOW_DAYS=7
 MIN_HISTORY_SAMPLES=24
 MAX_RECOMMENDATIONS=3
@@ -83,8 +89,33 @@ BASELINE_SHORT_WEIGHT=0.6
 BASELINE_LONG_WEIGHT=0.4
 ```
 
+Akses dev:
+
+```text
+http://127.0.0.1:8001
+```
+
+### Prod / VPS
+
 ```bash
-docker compose up -d --build
+cp .env.prod.example .env.prod
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+```
+
+Contoh env prod:
+
+```env
+APP_DOMAIN=ai-dev.example.com
+APP_PORT=8001
+HISTORY_WINDOW_DAYS=7
+MIN_HISTORY_SAMPLES=24
+MAX_RECOMMENDATIONS=3
+HIGH_TRIGGER_MULTIPLIER=1.22
+CRITICAL_TRIGGER_MULTIPLIER=1.45
+BASELINE_SHORT_WINDOW=6
+BASELINE_LONG_WINDOW=24
+BASELINE_SHORT_WEIGHT=0.6
+BASELINE_LONG_WEIGHT=0.4
 ```
 
 Untuk akses publik, arahkan subdomain ke IP VPS lalu hit:
@@ -93,22 +124,10 @@ Untuk akses publik, arahkan subdomain ke IP VPS lalu hit:
 http://ai-dev.example.com
 ```
 
-Kalau backend Anda ada di `docker-compose` yang sama, backend bisa hit AI service lewat nama service/container:
+Kalau backend Anda ada di Docker network yang sama, backend bisa hit AI service lewat:
 
 ```text
 http://nexora-ai:8001
-```
-
-Kalau backend berjalan di VPS yang sama tapi di luar docker:
-
-```text
-http://127.0.0.1:80
-```
-
-Compose file:
-
-```text
-docker-compose.yml
 ```
 
 ## Dokumentasi
